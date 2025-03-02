@@ -30,5 +30,5 @@ export {
 export { forEach } from "https://deno.land/x/stream_observables@v1.2/transforms/for-each.ts";
 export { single } from "https://deno.land/x/stream_observables@v1.2/sinks/single.ts";
 
-import ProgressBar from "https://deno.land/x/progress@v1.2.5/mod.ts";
+import ProgressBar from "https://deno.land/x/progress@v1.5.1/mod.ts";
 export { ProgressBar };
