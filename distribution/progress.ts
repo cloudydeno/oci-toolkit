@@ -3,6 +3,7 @@ import { forEach, ProgressBar } from "../deps.ts";
 export function showStreamProgress(totalSize: number) {
   const progressBar = new ProgressBar({
     total: totalSize,
+    output: Deno.stderr,
   });
 
   let bytesSoFar = 0;
