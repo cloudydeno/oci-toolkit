@@ -10,6 +10,7 @@ export async function sha256stream(byteStream: ReadableStream<Uint8Array>) {
         digest = new Sha256();
       },
       transform(chunk) {
+        // @ts-ignore-error Types on Sha256 broken starting Deno 2.2 - https://github.com/microsoft/TypeScript/pull/59417
         digest.update(chunk);
       },
       flush(controller) {

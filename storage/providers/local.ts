@@ -6,13 +6,13 @@ import {
 import { OciStoreApi } from "../api.ts";
 import { sha256bytesToHex } from "../../util/digest.ts";
 
-export class OciStoreLocal implements OciStoreApi {
+export class LocalStore implements OciStoreApi {
   constructor(
     readonly identifier = 'storage',
   ) {
     this.rootPath = path.join(
       Deno.env.get('HOME') ?? '.',
-      '.local', 'share', 'denodir-oci',
+      '.local', 'share', 'deno-oci-toolkit',
       this.identifier);
   }
   public readonly rootPath: string;
@@ -127,7 +127,7 @@ export class OciStoreLocal implements OciStoreApi {
 }
 
 export async function newLocalStore(identifier?: string) {
-  const store = new OciStoreLocal(identifier);
+  const store = new LocalStore(identifier);
   await store.init();
   return store;
 }

@@ -5,7 +5,7 @@ import {
   ManifestOCIDescriptor,
 } from "../deps.ts";
 import { OciStoreApi } from "../storage/api.ts";
-import { newRegistryStore, OciRegistry } from "../storage/providers/registry.ts";
+import { newRegistryStore, RegistryStore } from "../storage/providers/registry.ts";
 import { showStreamProgress } from "./progress.ts";
 
 export async function pushFullArtifact(sourceStore: OciStoreApi, manifestDigest: string, destinationRef: string, forceTag?: string) {
@@ -77,7 +77,7 @@ export async function pushFullImage(opts: {
   sourceStore: OciStoreApi;
   manifest: ManifestOCI;
   manifestRaw: Uint8Array;
-  client: OciRegistry;
+  client: RegistryStore;
   ref: string;
 }) {
   for (const layer of [opts.manifest.config, ...opts.manifest.layers]) {

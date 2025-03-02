@@ -1,7 +1,6 @@
 export { copy } from "https://deno.land/std@0.177.0/streams/copy.ts";
 export { readableStreamFromReader } from "https://deno.land/std@0.177.0/streams/readable_stream_from_reader.ts";
 export { readerFromIterable } from "https://deno.land/std@0.177.0/streams/reader_from_iterable.ts";
-export { Buffer as StreamBuffer } from "https://deno.land/std@0.177.0/streams/buffer.ts";
 
 export { Tar } from "https://deno.land/std@0.177.0/archive/tar.ts";
 export { Untar } from "https://deno.land/std@0.177.0/archive/untar.ts";

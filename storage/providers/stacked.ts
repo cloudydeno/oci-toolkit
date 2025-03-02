@@ -81,7 +81,7 @@ export class StackedStore implements OciStoreApi {
   }
 }
 
-export function createStackedStore(opts: {
+export function newStackedStore(opts: {
   writable?: OciStoreApi;
   readable: Array<OciStoreApi>;
 }) {

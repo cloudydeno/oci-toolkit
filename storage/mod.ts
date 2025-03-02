@@ -1,5 +1,5 @@
-export type { OciStoreApi } from "./api.ts";
-export { OciRegistry, newRegistryStore } from "./providers/registry.ts";
-export { OciStoreInmem, newInMemoryStore } from "./providers/in-memory.ts";
-export { OciStoreLocal, newLocalStore } from "./providers/local.ts";
-export { StackedStore, createStackedStore } from "./providers/stacked.ts";
+export { type OciStoreApi } from "./api.ts";
+export { RegistryStore, newRegistryStore } from "./providers/registry.ts";
+export { InMemoryStore, newInMemoryStore } from "./providers/in-memory.ts";
+export { LocalStore, newLocalStore } from "./providers/local.ts";
+export { StackedStore, newStackedStore } from "./providers/stacked.ts";

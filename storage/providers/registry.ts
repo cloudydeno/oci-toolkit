@@ -10,7 +10,7 @@ import { sha256bytesToHex } from "../../util/digest.ts";
 import { OciStoreApi } from "../api.ts";
 
 /** Simple API around an OCI / Docker registry. */
-export class OciRegistry implements OciStoreApi {
+export class RegistryStore implements OciStoreApi {
   constructor(
     public readonly api: RegistryClientV2,
   ) {}
@@ -150,5 +150,5 @@ export async function newRegistryStore(repo: RegistryRepo, scopes: Array<'pull' 
   console.error('-->', 'Creating OCI client for', repo.index.name,
     'for', scopes, 'as', config.username);
   const apiClient = new RegistryClientV2(config);
-  return new OciRegistry(apiClient);
+  return new RegistryStore(apiClient);
 }

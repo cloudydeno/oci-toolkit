@@ -1,12 +1,11 @@
 import {
   ManifestOCIDescriptor,
-  StreamBuffer,
   assertEquals,
 } from "../../deps.ts";
 import { OciStoreApi } from "../api.ts";
 import { sha256bytesToHex } from "../../util/digest.ts";
 
-export class OciStoreInmem implements OciStoreApi {
+export class InMemoryStore implements OciStoreApi {
   protected readonly storage = {
     blob: new Map<string, Uint8Array>(),
     manifest: new Map<string, Uint8Array>(),
@@ -62,11 +61,11 @@ export class OciStoreInmem implements OciStoreApi {
   }
   async getLayerStream(flavor: "blob" | "manifest", digest: string): Promise<ReadableStream<Uint8Array>> {
     const data = await this.getFullLayer(flavor, digest);
-    return new StreamBuffer(data).readable;
+    return ReadableStream.from([data]);
   }
 
 }
 
 export function newInMemoryStore() {
-  return new OciStoreInmem();
+  return new InMemoryStore();
 }
