@@ -81,9 +81,23 @@ export class RegistryStore implements OciStoreApi {
   }
 
   async describeManifest(reference: string): Promise<ManifestOCIDescriptor> {
-    // TODO: this should only be a HEAD request; needs library support
-    const {resp} = await this.api.getManifest({ ref: reference });
-    // if (resp.status == 404)
+    // TODO: Fix up library support for manifest head (aka resolving a tag)
+    await this.api.login();
+    //@ts-expect-error private field
+    const headers = new Headers(this.api._headers);
+    headers.set('accept', [
+      'application/vnd.docker.distribution.manifest.v1+json',
+      'application/vnd.docker.distribution.manifest.v1+prettyjws',
+      'application/vnd.docker.distribution.manifest.v2+json',
+      'application/vnd.oci.image.manifest.v1+json',
+      'application/vnd.docker.distribution.manifest.list.v2+json',
+      'application/vnd.oci.image.index.v1+json',
+    ].join(','));
+    const [resp] = await this.api._makeHttpRequest({
+      method: 'HEAD',
+      path: `/v2/${encodeURI(this.api.repo.remoteName ?? '')}/manifests/${encodeURI(reference)}`,
+      headers: headers
+    });
 
     const contentType = resp.headers.get('content-type');
     const contentLength = resp.headers.get('content-length');
