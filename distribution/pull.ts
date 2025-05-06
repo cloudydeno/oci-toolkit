@@ -1,21 +1,25 @@
 import {
-  ManifestOCI,
-  ManifestOCIIndex,
-  MEDIATYPE_MANIFEST_V2,
   MEDIATYPE_MANIFEST_LIST_V2,
-  MEDIATYPE_OCI_MANIFEST_V1,
+  MEDIATYPE_MANIFEST_V2,
   MEDIATYPE_OCI_MANIFEST_INDEX_V1,
+  MEDIATYPE_OCI_MANIFEST_V1,
   parseRepoAndRef,
-  RegistryRepo,
-  Manifest,
-  ManifestOCIDescriptor,
-  ManifestV2,
+  type Manifest,
+  type ManifestOCI,
+  type ManifestOCIDescriptor,
+  type ManifestOCIIndex,
+  type ManifestV2,
+  type RegistryImage,
+  type RegistryRepo,
 } from "../deps.ts";
 import { OciStoreApi } from "../storage/api.ts";
 import { newRegistryStore } from "../storage/providers/registry.ts";
 import { showStreamProgress } from "./progress.ts";
 
-export async function pullFullArtifact(store: OciStoreApi, reference: string) {
+export async function pullFullArtifact(store: OciStoreApi, reference: string): Promise<{
+  descriptor: ManifestOCIDescriptor;
+  reference: RegistryImage;
+}> {
 
   const rar = parseRepoAndRef(reference);
   const ref = rar.tag ?? rar.digest;
@@ -38,24 +42,27 @@ class ArtifactPuller {
     public readonly image: RegistryRepo,
   ) {}
 
-  static async makeForReference(targetStore: OciStoreApi, image: RegistryRepo) {
+  static async makeForReference(targetStore: OciStoreApi, image: RegistryRepo): Promise<ArtifactPuller> {
     const client = await newRegistryStore(image, ['pull']);
     return new ArtifactPuller(client, targetStore, image);
   }
 
-  async readManifest(digestOrTag: string) {
+  async readManifest(digestOrTag: string): Promise<{
+    bytes: Uint8Array;
+    json: Manifest;
+}> {
     const blob = await this.sourceStore.getFullLayer('manifest', digestOrTag);
     const json: Manifest = JSON.parse(new TextDecoder().decode(blob));
     return {bytes: blob, json};
   }
 
-  async resolveRef(ref: string) {
+  async resolveRef(ref: string): Promise<ManifestOCIDescriptor> {
     const stat = await this.sourceStore.describeManifest(ref);
     if (!stat?.digest) throw new Error(`Failed to resolve remote ref ${ref}`);
     return stat;
   }
 
-  async pullArtifact(descriptor: ManifestOCIDescriptor) {
+  async pullArtifact(descriptor: ManifestOCIDescriptor): Promise<ManifestOCIDescriptor> {
     if (descriptor.mediaType == MEDIATYPE_MANIFEST_LIST_V2
         || descriptor.mediaType == MEDIATYPE_OCI_MANIFEST_INDEX_V1) {
       return await this.pullList(descriptor);
@@ -69,7 +76,7 @@ class ArtifactPuller {
     return await this.pullImage(descriptor);
   }
 
-  async pullList(descriptor: ManifestOCIDescriptor) {
+  async pullList(descriptor: ManifestOCIDescriptor): Promise<ManifestOCIDescriptor> {
     const manifest = await this.readManifest(descriptor.digest);
 
     const indexManifest = manifest.json as ManifestOCIIndex;
@@ -90,7 +97,7 @@ class ArtifactPuller {
     return result;
   }
 
-  async pullImage(descriptor: ManifestOCIDescriptor) {
+  async pullImage(descriptor: ManifestOCIDescriptor): Promise<ManifestOCIDescriptor> {
     const manifest = await this.readManifest(descriptor.digest);
 
     const manifestMediaType = manifest.json.mediaType ?? descriptor.mediaType;

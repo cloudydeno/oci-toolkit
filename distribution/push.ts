@@ -1,14 +1,18 @@
 import {
   ManifestOCI,
+  ManifestOCIDescriptor,
   ManifestOCIIndex,
   parseRepoAndRef,
-  ManifestOCIDescriptor,
+  RegistryImage,
 } from "../deps.ts";
 import { OciStoreApi } from "../storage/api.ts";
 import { newRegistryStore, RegistryStore } from "../storage/providers/registry.ts";
 import { showStreamProgress } from "./progress.ts";
 
-export async function pushFullArtifact(sourceStore: OciStoreApi, manifestDigest: string, destinationRef: string, forceTag?: string) {
+export async function pushFullArtifact(sourceStore: OciStoreApi, manifestDigest: string, destinationRef: string, forceTag?: string): Promise<{
+  destination: RegistryImage;
+  descriptor: ManifestOCIDescriptor;
+}> {
   const manifestRaw = await sourceStore.getFullLayer('manifest', manifestDigest);
   const manifest: ManifestOCI | ManifestOCIIndex = JSON.parse(new TextDecoder().decode(manifestRaw));
 
@@ -79,7 +83,10 @@ export async function pushFullImage(opts: {
   manifestRaw: Uint8Array;
   client: RegistryStore;
   ref: string;
-}) {
+}): Promise<{
+  digest: string | null;
+  location: string | null;
+}> {
   for (const layer of [opts.manifest.config, ...opts.manifest.layers]) {
     if (await opts.client.hasBlob(layer.digest)) {
       console.error('   ', 'Registry already has', layer.digest);

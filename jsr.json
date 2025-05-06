@@ -1,0 +1,33 @@
+{
+  "name": "@cloudydeno/oci-toolkit",
+  "version": "0.2.0",
+  "exports": {
+    ".": "./mod.ts",
+    "./distribution/progress.ts": "./distribution/progress.ts",
+    "./distribution/pull.ts": "./distribution/pull.ts",
+    "./distribution/push.ts": "./distribution/push.ts",
+    "./image/export-as-archive.ts": "./image/export-as-archive.ts",
+    "./image/image-config.ts": "./image/image-config.ts",
+    "./image/manifest-builder.ts": "./image/manifest-builder.ts",
+    "./mod.ts": "./mod.ts",
+    "./storage/api.ts": "./storage/api.ts",
+    "./storage/mod.ts": "./storage/mod.ts",
+    "./storage/providers/in-memory.ts": "./storage/providers/in-memory.ts",
+    "./storage/providers/local.ts": "./storage/providers/local.ts",
+    "./storage/providers/registry.ts": "./storage/providers/registry.ts",
+    "./storage/providers/stacked.ts": "./storage/providers/stacked.ts",
+    "./util/digest.ts": "./util/digest.ts",
+    "./util/docker-credentials.ts": "./util/docker-credentials.ts",
+    "./util/gzip-stream.ts": "./util/gzip-stream.ts",
+    "./util/json-serialize.ts": "./util/json-serialize.ts",
+    "./util/sha256.ts": "./util/sha256.ts",
+    "./util/tar-extract.ts": "./util/tar-extract.ts"
+  },
+  "publish": {
+    "exclude": [
+      "hack",
+      ".github",
+      ".gitignore"
+    ]
+  }
+}

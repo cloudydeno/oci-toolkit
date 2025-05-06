@@ -6,7 +6,7 @@ import {
   RegistryRepo,
 } from "../../deps.ts";
 import { fetchDockerCredential } from "../../util/docker-credentials.ts";
-import { sha256bytesToHex } from "../../util/digest.ts";
+import { sha256bytes } from "../../util/digest.ts";
 import { OciStoreApi } from "../api.ts";
 
 /** Simple API around an OCI / Docker registry. */
@@ -15,7 +15,7 @@ export class RegistryStore implements OciStoreApi {
     public readonly api: RegistryClientV2,
   ) {}
 
-  async hasBlob(digest: string) {
+  async hasBlob(digest: string): Promise<boolean> {
     return await this.api
       .headBlob({ digest })
       .catch(nullIf404)
@@ -25,7 +25,7 @@ export class RegistryStore implements OciStoreApi {
   async uploadBlob(
     layer: ManifestOCIDescriptor,
     streamFactory: () => Promise<ReadableStream<Uint8Array>>,
-  ) {
+  ): Promise<void> {
     await this.api.blobUpload({
       digest: layer.digest,
       contentLength: layer.size,
@@ -33,7 +33,7 @@ export class RegistryStore implements OciStoreApi {
     });
   }
 
-  async getBlobStream(digest: string) {
+  async getBlobStream(digest: string): Promise<ReadableStream<Uint8Array>> {
     const bundle = await this.api.createBlobReadStream({digest});
     return bundle.stream;
   }
@@ -47,7 +47,7 @@ export class RegistryStore implements OciStoreApi {
   }
   async putLayerFromBytes(flavor: "blob"|"manifest",descriptor: Omit<ManifestOCIDescriptor,"digest"|"size">&{ digest?: string|undefined; },rawData: Uint8Array): Promise<ManifestOCIDescriptor> {
     if (flavor == 'blob') {
-      const digest = descriptor.digest ?? `sha256:${await sha256bytesToHex(rawData)}`;
+      const digest = descriptor.digest ?? `sha256:${await sha256bytes(rawData)}`;
       const fullDescriptor: ManifestOCIDescriptor = {
         ...descriptor,
         digest,
@@ -142,7 +142,7 @@ function nullIf404(err: unknown) {
 }
 
 
-export async function newRegistryStore(repo: RegistryRepo, scopes: Array<'pull' | 'push'>) {
+export async function newRegistryStore(repo: RegistryRepo, scopes: Array<'pull' | 'push'>): Promise<RegistryStore> {
   const config: RegistryClientOpts = {
     repo, scopes,
     acceptOCIManifests: true,

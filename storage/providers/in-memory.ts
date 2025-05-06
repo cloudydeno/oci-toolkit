@@ -3,22 +3,26 @@ import {
   assertEquals,
 } from "../../deps.ts";
 import { OciStoreApi } from "../api.ts";
-import { sha256bytesToHex } from "../../util/digest.ts";
+import { sha256bytes } from "../../util/digest.ts";
 
 export class InMemoryStore implements OciStoreApi {
-  protected readonly storage = {
-    blob: new Map<string, Uint8Array>(),
-    manifest: new Map<string, Uint8Array>(),
+  protected readonly storage: {
+    blob: Map<string, Uint8Array>;
+    manifest: Map<string, Uint8Array>;
+  } = {
+    blob: new Map,
+    manifest: new Map,
   };
 
-  putLayerFromFile(_flavor: "blob" | "manifest", _descriptor: ManifestOCIDescriptor, _sourcePath: string): Promise<ManifestOCIDescriptor> {
-    throw new Error("Method not implemented.");
+  async putLayerFromFile(flavor: "blob" | "manifest", descriptor: ManifestOCIDescriptor, sourcePath: string): Promise<ManifestOCIDescriptor> {
+    await using file = await Deno.open(sourcePath, { read: true });
+    return await this.putLayerFromStream(flavor, descriptor, file.readable);
   }
   async putLayerFromStream(flavor: "blob" | "manifest", descriptor: ManifestOCIDescriptor, stream: ReadableStream<Uint8Array>): Promise<ManifestOCIDescriptor> {
     return await this.putLayerFromBytes(flavor, descriptor, new Uint8Array(await new Response(stream).arrayBuffer()));
   }
   describeManifest(_reference: string): Promise<ManifestOCIDescriptor> {
-    throw new Error("Method not implemented.");
+    throw new Error("TODO: Method not implemented.");
   }
 
   async putLayerFromBytes(
@@ -28,7 +32,7 @@ export class InMemoryStore implements OciStoreApi {
   ): Promise<ManifestOCIDescriptor> {
 
     const size = rawData.byteLength;
-    const digest = `sha256:${await sha256bytesToHex(rawData)}`;
+    const digest = `sha256:${await sha256bytes(rawData)}`;
 
     if (descriptor.digest) {
       assertEquals(digest, descriptor.digest);
@@ -66,6 +70,6 @@ export class InMemoryStore implements OciStoreApi {
 
 }
 
-export function newInMemoryStore() {
+export function newInMemoryStore(): InMemoryStore {
   return new InMemoryStore();
 }

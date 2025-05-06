@@ -1,7 +1,7 @@
-import { path } from "../deps.ts";
+import { joinPath } from "../deps.ts";
 
 export async function readDockerConfig(): Promise<DockerConfig> {
-  const filePath = path.join(Deno.env.get('HOME') ?? '.', '.docker', 'config.json');
+  const filePath = joinPath(Deno.env.get('HOME') ?? '.', '.docker', 'config.json');
   try {
     return JSON.parse(await Deno.readTextFile(filePath));
   } catch (err) {
@@ -95,7 +95,7 @@ export class DockerCredentialHelper {
     return JSON.parse(stdout);
   }
 
-  async get(serverName: string) {
+  async get(serverName: string): Promise<DockerCredential | null> {
     this.log(`Asking Docker credential helper "${this.name}" about "${serverName}" ...`);
 
     const cred = await this.exec<DockerCredential>('get', serverName);

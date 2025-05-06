@@ -7,7 +7,10 @@ export interface CompressionStats {
   durationMillis: number;
 }
 
-export function gzipStream(readable: ReadableStream<Uint8Array>) {
+export function gzipStream(readable: ReadableStream<Uint8Array>): [
+  ReadableStream<Uint8Array>,
+  Promise<CompressionStats>,
+] {
   let rawSize = 0;
   let compressedSize = 0;
   const startTime = performance.now();
@@ -34,5 +37,5 @@ export function gzipStream(readable: ReadableStream<Uint8Array>) {
     `-`, Math.round(stats.ratio*10000)/100, '% smaller',
     `- in`, stats.durationMillis, 'ms'));
 
-  return [compressedStream, statsPromise] as const;
+  return [compressedStream, statsPromise];
 }

@@ -42,13 +42,13 @@ export class ImageConfigWriter {
   readonly creationDate: string;
   readonly data: OciImageConfig;
 
-  getEnv(key: string) {
+  getEnv(key: string): string | undefined {
     const prefix = `${key}=`;
     return this.data.config.Env
       .find(x => x.startsWith(prefix))
       ?.slice(prefix.length);
   }
-  setEnv(key: string, value: string) {
+  setEnv(key: string, value: string): void {
     const prefix = `${key}=`;
     const env = `${key}=${value}`;
     this.data.config.Env = this.data.config.Env.filter(x => !x.startsWith(prefix));
@@ -56,17 +56,17 @@ export class ImageConfigWriter {
     this.recordEmptyLayer(`ENV ${env}`);
   }
 
-  setEntrypoint(args: string[]) {
+  setEntrypoint(args: string[]): void {
     this.data.config.Entrypoint = args;
     this.recordEmptyLayer(`ENTRYPOINT [${args.map(x => JSON.stringify(x)).join(' ')}]`);
   }
 
-  setCommand(args: string[]) {
+  setCommand(args: string[]): void {
     this.data.config.Cmd = args;
     this.recordEmptyLayer(`CMD [${args.map(x => JSON.stringify(x)).join(' ')}]`);
   }
 
-  recordEmptyLayer(created_by: string) {
+  recordEmptyLayer(created_by: string): void {
     this.data.history?.push({
       empty_layer: true,
       created: this.creationDate,
@@ -78,7 +78,7 @@ export class ImageConfigWriter {
   recordDiffLayer(layer: {
     command: string;
     diffDigest: string;
-  }) {
+  }): void {
     this.data.history?.push({
       created: this.creationDate,
       created_by: layer.command,

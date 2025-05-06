@@ -2,22 +2,28 @@
 // https://github.com/opencontainers/image-spec/blob/main/image-layout.md
 
 import {
-  Buffer,
-  ManifestOCI,
-  ManifestOCIIndex,
-  ManifestV2,
-  ManifestV2List,
+  type ManifestOCI,
+  type ManifestOCIIndex,
+  type ManifestV2,
+  type ManifestV2List,
   MEDIATYPE_MANIFEST_LIST_V2,
   MEDIATYPE_MANIFEST_V2,
   MEDIATYPE_OCI_MANIFEST_INDEX_V1,
   MEDIATYPE_OCI_MANIFEST_V1,
-  readableStreamFromReader,
-  readerFromIterable,
-  Tar,
+  TarStream,
+  TarStreamInput,
 } from "../deps.ts";
 import { OciStoreApi } from "../storage/api.ts";
-import { sha256bytesToHex } from "../util/digest.ts";
+import { sha256bytes } from "../util/digest.ts";
 import { stableJsonSerialize } from "../util/json-serialize.ts";
+
+type ExportOpts = {
+  manifestDigest: string;
+  destination: WritableStream<Uint8Array>;
+  store: OciStoreApi;
+  fullRef?: string;
+  format: 'docker' | 'oci';
+};
 
 /**
  * Given a description of an OCI or Docker image,
@@ -33,13 +39,7 @@ import { stableJsonSerialize } from "../util/json-serialize.ts";
  * Podman is supposed to be able to load OCI Image Layouts.
  * We'll also be able to load denodir artifact layouts eventually.
  */
-export async function exportArtifactAsArchive(opts: {
-  manifestDigest: string;
-  destination: WritableStream<Uint8Array>;
-  store: OciStoreApi;
-  fullRef?: string;
-  format: 'docker' | 'oci';
-}) {
+export async function exportArtifactAsArchive(opts: ExportOpts): Promise<void> {
 
   const manifestBytes = await opts.store.getFullLayer('manifest', opts.manifestDigest);
   const manifestData = JSON.parse(new TextDecoder().decode(manifestBytes)) as ManifestV2 | ManifestOCI | ManifestV2List | ManifestOCIIndex;
@@ -73,121 +73,141 @@ export async function exportArtifactAsArchive(opts: {
     throw new Error(`Base manifest at ${opts.manifestDigest} has unsupported mediaType`);
   }
 
-  const configBytes = await opts.store.getFullLayer('blob', manifestData.config.digest);
+  switch (opts.format) {
+  case 'docker':
+    await ReadableStream
+      .from(emitAsDocker(opts, manifestData))
+      .pipeThrough(new TarStream())
+      .pipeTo(opts.destination);
+    break;
 
-  // TODO: streaming tar
-  const tar = new Tar();
+  case 'oci':
+    await ReadableStream
+      .from(emitAsOCI(opts, manifestBytes, manifestData))
+      .pipeThrough(new TarStream())
+      .pipeTo(opts.destination);
+    break;
 
-  if (opts.format === 'docker') {
-    // docker can't handle non-image OCI artifacts: "invalid image JSON, no RootFS key"
-    if (manifestData.config.mediaType !== "application/vnd.oci.image.config.v1+json") {
-      throw new Error(`docker cannot load non-image artifacts, perhaps export to 'oci' format`);
-    }
-
-    const tarManifest = {
-      Config: `${encodeDigest(manifestData.config.digest)}.json`,
-      RepoTags: opts.fullRef ? [opts.fullRef] : [],
-      Layers: new Array<string>(), // ['<sha256>.tar'],
-    };
-
-    tar.append(tarManifest.Config, tarBytes(configBytes));
-
-    let parent: string | undefined = undefined;
-
-    // Export each layer
-    for (const layer of manifestData.layers) {
-      const dirname = encodeDigest(layer.digest);
-      const compressedSha256 = layer.digest.split(':')[1];
-
-      tarManifest.Layers.push(dirname+'/layer.tar');
-      tar.append(dirname+'/layer.tar', {
-        reader: readerFromIterable(await opts.store.getLayerStream('blob', layer.digest)),
-        contentSize: layer.size,
-        mtime: 0,
-        fileMode: 0o444,
-      });
-      tar.append(dirname+'/VERSION', tarBytes(new TextEncoder().encode('1.0')));
-      tar.append(dirname+'/json', tarJson({
-        id: compressedSha256,
-        parent,
-      }));
-
-      parent = compressedSha256;
-    }
-
-    tar.append('manifest.json', tarJson([tarManifest]));
-    if (opts.fullRef) {
-      tar.append('repositories', tarJson({
-        [opts.fullRef.split(':')[0]]: {
-          [opts.fullRef.split(':')[1]]: parent,
-        },
-      }));
-    }
-
-    await readableStreamFromReader(tar.getReader()).pipeTo(opts.destination);
-    return;
+  default:
+    throw new Error(`Unsupported archive export format "${opts.format}"`);
   }
-
-  if (opts.format === 'oci') {
-    // TODO: find a way to verify OCI image layout archive
-
-    const manifestDigest = await sha256bytesToHex(manifestBytes);
-
-    tar.append('oci-layout', tarJson({
-      "imageLayoutVersion": "1.0.0",
-    }));
-
-    const tarIndex: ManifestOCIIndex = {
-      schemaVersion: 2,
-      manifests: [{
-        mediaType: "application/vnd.oci.image.manifest.v1+json",
-        size: manifestBytes.byteLength,
-        digest: `sha256:${manifestDigest}`,
-        // TODO: way to specify the platform
-        // platform: {
-        //   os: baseConfig.os,
-        //   architecture: baseConfig.architecture,
-        // },
-        annotations: opts.fullRef ? {
-          'org.opencontainers.image.ref.name': opts.fullRef,
-        } : {},
-      }],
-    };
-    tar.append('index.json', tarJson([tarIndex]));
-
-    tar.append(`blobs/sha256/${manifestDigest}`, tarBytes(manifestBytes));
-
-    // Config blob
-    tar.append(`blobs/${encodeDigest(manifestData.config.digest)}`, tarBytes(configBytes));
-
-    // Layer blobs
-    for (const layer of manifestData.layers) {
-      tar.append(`blobs/${encodeDigest(layer.digest)}`, {
-        reader: readerFromIterable(await opts.store.getLayerStream('blob', layer.digest)),
-        contentSize: layer.size,
-        mtime: 0,
-        fileMode: 0o444,
-      });
-    }
-
-    await readableStreamFromReader(tar.getReader()).pipeTo(opts.destination);
-    return;
-  }
-
-  throw new Error(`Unsupported export format ${opts.format}`);
 }
 
+async function* emitAsDocker(opts: ExportOpts, manifestData: ManifestV2 | ManifestOCI): AsyncGenerator<TarStreamInput> {
 
-function tarJson(data: unknown) {
-  return tarBytes(stableJsonSerialize(data));
+  // docker can't handle non-image OCI artifacts: "invalid image JSON, no RootFS key"
+  if (manifestData.config.mediaType !== "application/vnd.oci.image.config.v1+json") {
+    throw new Error(`docker cannot load non-image artifacts, perhaps export to 'oci' format`);
+  }
+
+  const tarManifest = {
+    Config: `${encodeDigest(manifestData.config.digest)}.json`,
+    RepoTags: opts.fullRef ? [opts.fullRef] : [],
+    Layers: new Array<string>(), // ['<sha256>.tar'],
+  };
+
+  yield tarBytes(tarManifest.Config,
+    await opts.store.getFullLayer('blob', manifestData.config.digest));
+
+  let parent: string | undefined = undefined;
+
+  // Export each layer
+  for (const layer of manifestData.layers) {
+    const dirname = encodeDigest(layer.digest);
+    const compressedSha256 = layer.digest.split(':')[1];
+
+    tarManifest.Layers.push(dirname+'/layer.tar');
+    yield {
+      path: dirname+'/layer.tar',
+      type: 'file',
+      readable: await opts.store.getLayerStream('blob', layer.digest),
+      size: layer.size,
+      options: {
+        mtime: 0,
+        mode: 0o444,
+      },
+    };
+    yield tarBytes(dirname+'/VERSION', new TextEncoder().encode('1.0'));
+    yield tarJson(dirname+'/json', {
+      id: compressedSha256,
+      parent,
+    });
+
+    parent = compressedSha256;
+  }
+
+  yield tarJson('manifest.json', [tarManifest]);
+  if (opts.fullRef) {
+    yield tarJson('repositories', {
+      [opts.fullRef.split(':')[0]]: {
+        [opts.fullRef.split(':')[1]]: parent,
+      },
+    });
+  }
 }
 
-function tarBytes(raw: Uint8Array) {
+async function* emitAsOCI(opts: ExportOpts, manifestBytes: Uint8Array, manifestData: ManifestV2 | ManifestOCI): AsyncGenerator<TarStreamInput> {
+  // TODO: find a way to verify OCI image layout archive
+
+  const manifestDigest = await sha256bytes(manifestBytes);
+
+  yield tarJson('oci-layout', {
+    "imageLayoutVersion": "1.0.0",
+  });
+
+  const tarIndex: ManifestOCIIndex = {
+    schemaVersion: 2,
+    manifests: [{
+      mediaType: "application/vnd.oci.image.manifest.v1+json",
+      size: manifestBytes.byteLength,
+      digest: `sha256:${manifestDigest}`,
+      // TODO: way to specify the platform
+      // platform: {
+      //   os: baseConfig.os,
+      //   architecture: baseConfig.architecture,
+      // },
+      annotations: opts.fullRef ? {
+        'org.opencontainers.image.ref.name': opts.fullRef,
+      } : {},
+    }],
+  };
+  yield tarJson('index.json', [tarIndex]);
+
+  yield tarBytes(`blobs/sha256/${manifestDigest}`, manifestBytes);
+
+  // Config blob
+  yield tarBytes(`blobs/${encodeDigest(manifestData.config.digest)}`,
+    await opts.store.getFullLayer('blob', manifestData.config.digest));
+
+  // Layer blobs
+  for (const layer of manifestData.layers) {
+    yield {
+      path: `blobs/${encodeDigest(layer.digest)}`,
+      type: 'file',
+      readable: await opts.store.getLayerStream('blob', layer.digest),
+      size: layer.size,
+      options: {
+        mtime: 0,
+        mode: 0o444,
+      },
+    };
+  }
+}
+
+function tarJson(path: string, data: unknown) {
+  return tarBytes(path, stableJsonSerialize(data));
+}
+
+function tarBytes(path: string, raw: Uint8Array): TarStreamInput {
   return {
-    reader: new Buffer(raw),
-    contentSize: raw.byteLength,
-    mtime: 0,
-    fileMode: 0o444,
+    path,
+    type: 'file',
+    readable: ReadableStream.from([raw]),
+    size: raw.byteLength,
+    options: {
+      mtime: 0,
+      mode: 0o444,
+    },
   };
 }
 

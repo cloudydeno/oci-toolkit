@@ -13,7 +13,7 @@ export { exportArtifactAsArchive } from './image/export-as-archive.ts';
 export { type OciImageConfig, ImageConfigWriter } from './image/image-config.ts';
 export { OciManifestBuilder, DescriptorEmptyJSON } from './image/manifest-builder.ts';
 
-export { sha256bytesToHex, sha256stream, sha256string } from './util/digest.ts';
+export { sha256bytes, sha256stream } from './util/digest.ts';
 export {
   readDockerConfig, fetchDockerCredential,
   type DockerConfig, type DockerCredential,

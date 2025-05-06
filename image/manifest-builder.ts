@@ -8,14 +8,14 @@ export const DescriptorEmptyJSON: ManifestOCIDescriptor & {data: 'e30='} = {
 };
 
 export class OciManifestBuilder {
-  setConfig(descriptor: ManifestOCIDescriptor) {
+  setConfig(descriptor: ManifestOCIDescriptor): void {
     this.data.config = descriptor;
   }
-  addLayer(descriptor: ManifestOCIDescriptor) {
+  addLayer(descriptor: ManifestOCIDescriptor): void {
     this.data.layers.push(descriptor);
   }
-  async writeBlob(props: { mediaType: string; content: Uint8Array; }) {
-    const hash = await sha256bytesToHex(props.content);
+  async writeBlob(props: { mediaType: string; content: Uint8Array; }): Promise<ManifestOCIDescriptor> {
+    const hash = await sha256bytes(props.content);
     const descriptor: ManifestOCIDescriptor = {
       mediaType: props.mediaType,
       size: props.content.byteLength,
@@ -27,7 +27,7 @@ export class OciManifestBuilder {
     });
     return descriptor;
   }
-  setAnnotation(key: string, value: string) {
+  setAnnotation(key: string, value: string): void {
     this.data.annotations[key] = value;
   }
 
@@ -39,13 +39,13 @@ export class OciManifestBuilder {
     annotations: {},
   };
 
-  public readonly blobs = new Map<string, {
+  public readonly blobs: Map<string, {
     descriptor: ManifestOCIDescriptor;
     bytes: Uint8Array;
-  }>;
+  }> = new Map;
 }
 
-async function sha256bytesToHex(message: Uint8Array) {
+async function sha256bytes(message: Uint8Array) {
   const hash = await crypto.subtle.digest('SHA-256', message);
   return bytesToHex(hash);
 }

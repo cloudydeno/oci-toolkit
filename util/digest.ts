@@ -1,7 +1,9 @@
-import { Sha256, single } from "../deps.ts";
+import { single } from "../deps.ts";
+import { Sha256 } from "./sha256.ts";
 
-export async function sha256stream(byteStream: ReadableStream<Uint8Array>) {
-  // Until subtle crypto has streaming digesting, this will have to do
+/** Computes a hex digest of the given stream of bytes */
+export async function sha256stream(byteStream: ReadableStream<Uint8Array>): Promise<string> {
+  // Until SubtleCrypto can digest a ReadableStream, this will have to do
   let digest: Sha256;
 
   const hashStream = new TransformStream<Uint8Array, string>(
@@ -10,7 +12,6 @@ export async function sha256stream(byteStream: ReadableStream<Uint8Array>) {
         digest = new Sha256();
       },
       transform(chunk) {
-        // @ts-ignore-error Types on Sha256 broken starting Deno 2.2 - https://github.com/microsoft/TypeScript/pull/59417
         digest.update(chunk);
       },
       flush(controller) {
@@ -24,14 +25,8 @@ export async function sha256stream(byteStream: ReadableStream<Uint8Array>) {
   return await single(byteStream.pipeThrough(hashStream));
 }
 
-export async function sha256string(message: string) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return bytesToHex(hash);
-}
-
-export async function sha256bytesToHex(message: Uint8Array) {
+/** Computes a hex digest of the given byte array */
+export async function sha256bytes(message: Uint8Array): Promise<string> {
   const hash = await crypto.subtle.digest('SHA-256', message);
   return bytesToHex(hash);
 }
