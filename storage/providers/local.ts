@@ -7,13 +7,17 @@ import { OciStoreApi } from "../api.ts";
 import { sha256bytesToHex } from "../../util/digest.ts";
 
 export class LocalStore implements OciStoreApi {
+  /** @param identifier Either a keyword for isolated storage in the user's homedir,
+   * or a relative path (./) for storage within the working directory. */
   constructor(
     readonly identifier = 'storage',
   ) {
-    this.rootPath = path.join(
-      Deno.env.get('HOME') ?? '.',
-      '.local', 'share', 'deno-oci-toolkit',
-      this.identifier);
+    this.rootPath = identifier.startsWith('./')
+      ? identifier
+      : path.join(
+        Deno.env.get('HOME') ?? '.',
+        '.local', 'share', 'deno-oci-toolkit',
+        this.identifier);
   }
   public readonly rootPath: string;
 
