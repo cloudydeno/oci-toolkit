@@ -1,6 +1,3 @@
-// make a tarball for a built artifact
-// https://github.com/opencontainers/image-spec/blob/main/image-layout.md
-
 import {
   type Manifest,
   type ManifestOCI,
@@ -10,10 +7,13 @@ import {
   MEDIATYPE_MANIFEST_V2,
   MEDIATYPE_OCI_MANIFEST_INDEX_V1,
   MEDIATYPE_OCI_MANIFEST_V1,
+} from "@cloudydeno/docker-registry-client";
+import {
   TarStream,
-  TarStreamInput,
-} from "../deps.ts";
-import { OciStoreApi } from "../storage/api.ts";
+  type TarStreamInput,
+} from "@std/tar";
+
+import type { OciStoreApi } from "../storage/api.ts";
 import { sha256bytes } from "../util/digest.ts";
 import { stableJsonSerialize } from "../util/json-serialize.ts";
 

@@ -1,9 +1,8 @@
-import {
-  assertEquals,
-  ManifestOCIDescriptor,
-  joinPath,
-} from "../../deps.ts";
-import { OciStoreApi } from "../api.ts";
+import type { ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+import { join as joinPath } from "@std/path/join";
+import { assertEquals } from "@std/assert/equals";
+
+import type { OciStoreApi } from "../api.ts";
 import { sha256bytes } from "../../util/digest.ts";
 
 export class LocalStore implements OciStoreApi {

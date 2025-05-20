@@ -1,4 +1,4 @@
-import { forEach } from "../deps.ts"
+import { forEach } from "@cloudydeno/stream-observables/transforms/for-each.ts";
 
 export interface CompressionStats {
   rawSize: number;
@@ -7,6 +7,11 @@ export interface CompressionStats {
   durationMillis: number;
 }
 
+/**
+ * Compresses a stream using gzip and reports the final compression ratio.
+ * @param readable The input data to be compressed.
+ * @returns A tuple, with the compressed output stream and a statistics promise.
+ */
 export function gzipStream(readable: ReadableStream<Uint8Array>): [
   ReadableStream<Uint8Array>,
   Promise<CompressionStats>,

@@ -11,12 +11,19 @@ import {
   type ManifestV2,
   type RegistryImage,
   type RegistryRepo,
-} from "../deps.ts";
-import { OciStoreApi } from "../storage/api.ts";
+} from "@cloudydeno/docker-registry-client";
+
+import type { OciStoreApi } from "../storage/api.ts";
 import { newRegistryStore } from "../storage/providers/registry.ts";
 import { showStreamProgress } from "./progress.ts";
 
-export async function pullFullArtifact(store: OciStoreApi, reference: string): Promise<{
+/**
+ * Resolves a ref to a remote registry and downloads all layers which are not present locally.
+ * @param targetStore Where the blobs and manifests should be saved to
+ * @param reference The source image, will be resolved to an OCI registry.
+ * @returns A descriptor of the top level manifest which was pulled
+ */
+export async function pullFullArtifact(targetStore: OciStoreApi, reference: string): Promise<{
   descriptor: ManifestOCIDescriptor;
   reference: RegistryImage;
 }> {
@@ -25,7 +32,7 @@ export async function pullFullArtifact(store: OciStoreApi, reference: string): P
   const ref = rar.tag ?? rar.digest;
   if (!ref) throw 'No desired tag or digest found';
 
-  const puller = await ArtifactPuller.makeForReference(store, rar);
+  const puller = await ArtifactPuller.makeForReference(targetStore, rar);
 
   const descriptor = await puller.resolveRef(ref);
 

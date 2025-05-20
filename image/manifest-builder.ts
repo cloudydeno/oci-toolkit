@@ -1,4 +1,4 @@
-import type { ManifestOCI, ManifestOCIDescriptor } from "../deps.ts";
+import type { ManifestOCI, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
 
 export const DescriptorEmptyJSON: ManifestOCIDescriptor & {data: 'e30='} = {
   "mediaType": "application/vnd.oci.empty.v1+json",

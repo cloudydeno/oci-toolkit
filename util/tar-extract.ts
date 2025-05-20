@@ -1,4 +1,7 @@
-import { UntarStream, forEach, joinPath, dirnamePath } from "../deps.ts";
+import { forEach } from "@cloudydeno/stream-observables/transforms/for-each.ts";
+import { UntarStream } from "@std/tar/untar-stream";
+import { join as joinPath } from "@std/path/join";
+import { dirname as dirnamePath } from "@std/path/dirname";
 
 /** Streams thru a Tar archive and writes out its files underneath the given path */
 export async function extractTarArchive(

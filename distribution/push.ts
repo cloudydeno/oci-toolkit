@@ -1,12 +1,13 @@
 import {
-  ManifestOCI,
-  ManifestOCIDescriptor,
-  ManifestOCIIndex,
   parseRepoAndRef,
-  RegistryImage,
-} from "../deps.ts";
-import { OciStoreApi } from "../storage/api.ts";
-import { newRegistryStore, RegistryStore } from "../storage/providers/registry.ts";
+  type ManifestOCI,
+  type ManifestOCIDescriptor,
+  type ManifestOCIIndex,
+  type RegistryImage,
+} from "@cloudydeno/docker-registry-client";
+
+import type { OciStoreApi } from "../storage/api.ts";
+import { newRegistryStore, type RegistryStore } from "../storage/providers/registry.ts";
 import { showStreamProgress } from "./progress.ts";
 
 export async function pushFullArtifact(sourceStore: OciStoreApi, manifestDigest: string, destinationRef: string, forceTag?: string): Promise<{

@@ -1,6 +1,6 @@
 import type {
   ManifestOCIDescriptor,
-} from "../deps.ts";
+} from "@cloudydeno/docker-registry-client";
 
 export interface OciStoreApi {
 

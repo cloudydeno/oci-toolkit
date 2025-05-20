@@ -1,4 +1,5 @@
-import { single } from "../deps.ts";
+import { single } from "@cloudydeno/stream-observables/sinks/single.ts";
+
 import { Sha256 } from "./sha256.ts";
 
 /** Computes a hex digest of the given stream of bytes */

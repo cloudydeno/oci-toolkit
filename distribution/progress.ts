@@ -1,4 +1,5 @@
-import { forEach, ProgressBar } from "../deps.ts";
+import ProgressBar from "@deno-library/progress";
+import { forEach } from "@cloudydeno/stream-observables/transforms/for-each.ts";
 
 export function showStreamProgress(totalSize: number): TransformStream<Uint8Array> {
   const progressBar = new ProgressBar({

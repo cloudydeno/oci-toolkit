@@ -1,4 +1,4 @@
-import { joinPath } from "../deps.ts";
+import { join as joinPath } from "@std/path/join";
 
 export async function readDockerConfig(): Promise<DockerConfig> {
   const filePath = joinPath(Deno.env.get('HOME') ?? '.', '.docker', 'config.json');

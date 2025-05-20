@@ -1,5 +1,6 @@
-import { ManifestOCIDescriptor } from "../../deps.ts";
-import { OciStoreApi } from "../api.ts";
+import type { ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+
+import type { OciStoreApi } from "../api.ts";
 
 export class StackedStore implements OciStoreApi {
   constructor(
