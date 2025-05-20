@@ -6,3 +6,5 @@ deno run \
   https://raw.githubusercontent.com/oscarotero/jsr-pub/4d1ef6e25b02fc26551fa7e5d29bbdc5e9884050/mod.ts \
   --name "$(jq -r .name < deno.json)" \
   --version "$(jq -r .version < deno.json)"
+
+sed -i -e '$a\' deno.json
