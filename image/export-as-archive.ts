@@ -2,10 +2,10 @@
 // https://github.com/opencontainers/image-spec/blob/main/image-layout.md
 
 import {
+  type Manifest,
   type ManifestOCI,
   type ManifestOCIIndex,
   type ManifestV2,
-  type ManifestV2List,
   MEDIATYPE_MANIFEST_LIST_V2,
   MEDIATYPE_MANIFEST_V2,
   MEDIATYPE_OCI_MANIFEST_INDEX_V1,
@@ -19,7 +19,6 @@ import { stableJsonSerialize } from "../util/json-serialize.ts";
 
 type ExportOpts = {
   manifestDigest: string;
-  destination: WritableStream<Uint8Array>;
   store: OciStoreApi;
   fullRef?: string;
   format: 'docker' | 'oci';
@@ -39,14 +38,14 @@ type ExportOpts = {
  * Podman is supposed to be able to load OCI Image Layouts.
  * We'll also be able to load denodir artifact layouts eventually.
  */
-export async function exportArtifactAsArchive(opts: ExportOpts): Promise<void> {
+export async function exportArtifactAsArchive(opts: ExportOpts): Promise<ReadableStream<Uint8Array>> {
 
   const manifestBytes = await opts.store.getFullLayer('manifest', opts.manifestDigest);
-  const manifestData = JSON.parse(new TextDecoder().decode(manifestBytes)) as ManifestV2 | ManifestOCI | ManifestV2List | ManifestOCIIndex;
+  const manifestData = JSON.parse(new TextDecoder().decode(manifestBytes)) as Manifest;
 
   // When given a multi-arch manifest, pick one to use
   if (manifestData.mediaType == MEDIATYPE_OCI_MANIFEST_INDEX_V1
-    || manifestData.mediaType == MEDIATYPE_MANIFEST_LIST_V2) {
+      || manifestData.mediaType == MEDIATYPE_MANIFEST_LIST_V2) {
 
     // TODO: something better, or at least reusable
     const selectedManifest = manifestData.manifests.find(archManifest => {
@@ -69,24 +68,20 @@ export async function exportArtifactAsArchive(opts: ExportOpts): Promise<void> {
     });
 
   } else if (manifestData.mediaType !== MEDIATYPE_MANIFEST_V2
-   && manifestData.mediaType !== MEDIATYPE_OCI_MANIFEST_V1) {
+      && manifestData.mediaType !== MEDIATYPE_OCI_MANIFEST_V1) {
     throw new Error(`Base manifest at ${opts.manifestDigest} has unsupported mediaType`);
   }
 
   switch (opts.format) {
   case 'docker':
-    await ReadableStream
+    return ReadableStream
       .from(emitAsDocker(opts, manifestData))
-      .pipeThrough(new TarStream())
-      .pipeTo(opts.destination);
-    break;
+      .pipeThrough(new TarStream());
 
   case 'oci':
-    await ReadableStream
+    return ReadableStream
       .from(emitAsOCI(opts, manifestBytes, manifestData))
-      .pipeThrough(new TarStream())
-      .pipeTo(opts.destination);
-    break;
+      .pipeThrough(new TarStream());
 
   default:
     throw new Error(`Unsupported archive export format "${opts.format}"`);
