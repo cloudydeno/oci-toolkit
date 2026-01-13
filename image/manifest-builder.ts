@@ -1,4 +1,4 @@
-import type { ManifestOCI, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+import type { ByteArray, ManifestOCI, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
 
 export const DescriptorEmptyJSON: ManifestOCIDescriptor & {data: 'e30='} = {
   "mediaType": "application/vnd.oci.empty.v1+json",
@@ -14,7 +14,10 @@ export class OciManifestBuilder {
   addLayer(descriptor: ManifestOCIDescriptor): void {
     this.data.layers.push(descriptor);
   }
-  async writeBlob(props: { mediaType: string; content: Uint8Array; }): Promise<ManifestOCIDescriptor> {
+  async writeBlob(props: {
+    mediaType: string;
+    content: ByteArray;
+  }): Promise<ManifestOCIDescriptor> {
     const hash = await sha256bytes(props.content);
     const descriptor: ManifestOCIDescriptor = {
       mediaType: props.mediaType,
@@ -41,11 +44,11 @@ export class OciManifestBuilder {
 
   public readonly blobs: Map<string, {
     descriptor: ManifestOCIDescriptor;
-    bytes: Uint8Array;
+    bytes: ByteArray;
   }> = new Map;
 }
 
-async function sha256bytes(message: Uint8Array) {
+async function sha256bytes(message: BufferSource) {
   const hash = await crypto.subtle.digest('SHA-256', message);
   return bytesToHex(hash);
 }

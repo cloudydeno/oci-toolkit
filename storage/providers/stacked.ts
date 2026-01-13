@@ -1,4 +1,4 @@
-import type { ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+import type { ByteArray, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
 
 import type { OciStoreApi } from "../api.ts";
 
@@ -37,11 +37,11 @@ export class StackedStore implements OciStoreApi {
 
   // Read methods
 
-  async getFullLayer(flavor: 'blob' | 'manifest', digest: string): Promise<Uint8Array> {
+  async getFullLayer(flavor: 'blob' | 'manifest', digest: string): Promise<ByteArray> {
     return await this.firstReadWithout404(store =>
       store.getFullLayer(flavor, digest));
   }
-  async getLayerStream(flavor: 'blob' | 'manifest', digest: string): Promise<ReadableStream<Uint8Array>> {
+  async getLayerStream(flavor: 'blob' | 'manifest', digest: string): Promise<ReadableStream<ByteArray>> {
     return await this.firstReadWithout404(store =>
       store.getLayerStream(flavor, digest));
   }
@@ -69,7 +69,7 @@ export class StackedStore implements OciStoreApi {
   async putLayerFromStream(
     flavor: 'blob' | 'manifest',
     descriptor: ManifestOCIDescriptor,
-    stream: ReadableStream<Uint8Array>,
+    stream: ReadableStream<ByteArray>,
   ): Promise<ManifestOCIDescriptor> {
     const store = this.ensureRwStore();
     return await store.putLayerFromStream(flavor, descriptor, stream);
@@ -77,7 +77,7 @@ export class StackedStore implements OciStoreApi {
   async putLayerFromBytes(
     flavor: 'blob' | 'manifest',
     descriptor: Omit<ManifestOCIDescriptor, 'digest' | 'size'> & { digest?: string },
-    rawData: Uint8Array,
+    rawData: ByteArray,
   ): Promise<ManifestOCIDescriptor> {
     const store = this.ensureRwStore();
     return await store.putLayerFromBytes(flavor, descriptor, rawData);

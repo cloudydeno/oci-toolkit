@@ -1,13 +1,14 @@
-import { single } from "@cloudydeno/stream-observables/sinks/single.ts";
+import { single } from "@cloudydeno/stream-observables/sinks/single";
+import type { ByteArray } from "@cloudydeno/docker-registry-client/types";
 
 import { Sha256 } from "./sha256.ts";
 
 /** Computes a hex digest of the given stream of bytes */
-export async function sha256stream(byteStream: ReadableStream<Uint8Array>): Promise<string> {
+export async function sha256stream(byteStream: ReadableStream<ByteArray>): Promise<string> {
   // Until SubtleCrypto can digest a ReadableStream, this will have to do
   let digest: Sha256;
 
-  const hashStream = new TransformStream<Uint8Array, string>(
+  const hashStream = new TransformStream<ByteArray, string>(
     {
       start() {
         digest = new Sha256();
@@ -27,7 +28,7 @@ export async function sha256stream(byteStream: ReadableStream<Uint8Array>): Prom
 }
 
 /** Computes a hex digest of the given byte array */
-export async function sha256bytes(message: Uint8Array): Promise<string> {
+export async function sha256bytes(message: BufferSource): Promise<string> {
   const hash = await crypto.subtle.digest('SHA-256', message);
   return bytesToHex(hash);
 }

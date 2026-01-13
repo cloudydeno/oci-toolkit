@@ -1,4 +1,4 @@
-import type { ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+import type { ByteArray, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
 import { join as joinPath } from "@std/path/join";
 import { assertEquals } from "@std/assert/equals";
 
@@ -52,7 +52,7 @@ export class LocalStore implements OciStoreApi {
   async putLayerFromStream(
     flavor: 'blob' | 'manifest',
     descriptor: ManifestOCIDescriptor,
-    stream: ReadableStream<Uint8Array>,
+    stream: ReadableStream<ByteArray>,
   ): Promise<ManifestOCIDescriptor> {
     const [digestType, digestValue] = descriptor.digest.split(':');
     const layerPath = joinPath(this.rootPath, `${flavor}s`, digestType, digestValue);
@@ -68,7 +68,7 @@ export class LocalStore implements OciStoreApi {
   async putLayerFromBytes(
     flavor: 'blob' | 'manifest',
     descriptor: Omit<ManifestOCIDescriptor, 'digest' | 'size'> & { digest?: string },
-    rawData: Uint8Array
+    rawData: ByteArray,
   ): Promise<ManifestOCIDescriptor> {
     const size = rawData.byteLength;
     const digest = `sha256:${await sha256bytes(rawData)}`;
@@ -104,7 +104,7 @@ export class LocalStore implements OciStoreApi {
       .catch(err => err instanceof Deno.errors.NotFound ? null : Promise.reject(err));
   }
 
-  async getFullLayer(flavor: 'blob' | 'manifest', digest: string): Promise<Uint8Array> {
+  async getFullLayer(flavor: 'blob' | 'manifest', digest: string): Promise<ByteArray> {
     const [digestType, digestValue] = digest.split(':');
     assertEquals(digestType, 'sha256');
     const layerPath = joinPath(this.rootPath, `${flavor}s`, digestType, digestValue);
@@ -117,7 +117,7 @@ export class LocalStore implements OciStoreApi {
       });
   }
 
-  async getLayerStream(flavor: 'blob' | 'manifest', digest: string): Promise<ReadableStream<Uint8Array>> {
+  async getLayerStream(flavor: 'blob' | 'manifest', digest: string): Promise<ReadableStream<ByteArray>> {
     const [digestType, digestValue] = digest.split(':');
     const layerPath = joinPath(this.rootPath, `${flavor}s`, digestType, digestValue);
 

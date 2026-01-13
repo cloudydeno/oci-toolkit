@@ -1,4 +1,4 @@
-import type { ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+import type { ByteArray, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
 import { assertEquals } from "@std/assert/equals";
 
 import type { OciStoreApi } from "../api.ts";
@@ -6,8 +6,8 @@ import { sha256bytes } from "../../util/digest.ts";
 
 export class InMemoryStore implements OciStoreApi {
   protected readonly storage: {
-    blob: Map<string, Uint8Array>;
-    manifest: Map<string, Uint8Array>;
+    blob: Map<string, ByteArray>;
+    manifest: Map<string, ByteArray>;
   } = {
     blob: new Map,
     manifest: new Map,
@@ -17,7 +17,7 @@ export class InMemoryStore implements OciStoreApi {
     await using file = await Deno.open(sourcePath, { read: true });
     return await this.putLayerFromStream(flavor, descriptor, file.readable);
   }
-  async putLayerFromStream(flavor: "blob" | "manifest", descriptor: ManifestOCIDescriptor, stream: ReadableStream<Uint8Array>): Promise<ManifestOCIDescriptor> {
+  async putLayerFromStream(flavor: "blob" | "manifest", descriptor: ManifestOCIDescriptor, stream: ReadableStream<ByteArray>): Promise<ManifestOCIDescriptor> {
     return await this.putLayerFromBytes(flavor, descriptor, new Uint8Array(await new Response(stream).arrayBuffer()));
   }
   describeManifest(_reference: string): Promise<ManifestOCIDescriptor> {
@@ -27,7 +27,7 @@ export class InMemoryStore implements OciStoreApi {
   async putLayerFromBytes(
     flavor: 'blob' | 'manifest',
     descriptor: Omit<ManifestOCIDescriptor, 'digest' | 'size'> & { digest?: string },
-    rawData: Uint8Array,
+    rawData: ByteArray,
   ): Promise<ManifestOCIDescriptor> {
 
     const size = rawData.byteLength;
@@ -56,13 +56,13 @@ export class InMemoryStore implements OciStoreApi {
       size: data.byteLength,
     } : null);
   }
-  getFullLayer(flavor: "blob" | "manifest", digest: string): Promise<Uint8Array> {
+  getFullLayer(flavor: "blob" | "manifest", digest: string): Promise<ByteArray> {
     const data = this.storage[flavor].get(digest);
     if (!data)
       throw new Deno.errors.NotFound(`Inmem store lacks ${flavor} ${digest}`);
     return Promise.resolve(data);
   }
-  async getLayerStream(flavor: "blob" | "manifest", digest: string): Promise<ReadableStream<Uint8Array>> {
+  async getLayerStream(flavor: "blob" | "manifest", digest: string): Promise<ReadableStream<ByteArray>> {
     const data = await this.getFullLayer(flavor, digest);
     return ReadableStream.from([data]);
   }

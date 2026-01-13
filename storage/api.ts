@@ -1,4 +1,5 @@
 import type {
+  ByteArray,
   ManifestOCIDescriptor,
 } from "@cloudydeno/docker-registry-client";
 
@@ -13,13 +14,13 @@ export interface OciStoreApi {
   putLayerFromStream(
     flavor: 'blob' | 'manifest',
     descriptor: ManifestOCIDescriptor,
-    stream: ReadableStream<Uint8Array>,
+    stream: ReadableStream<ByteArray>,
   ): Promise<ManifestOCIDescriptor>;
 
   putLayerFromBytes(
     flavor: 'blob' | 'manifest',
     descriptor: Omit<ManifestOCIDescriptor, 'digest' | 'size'> & { digest?: string },
-    rawData: Uint8Array,
+    rawData: ByteArray,
   ): Promise<ManifestOCIDescriptor>;
 
   statLayer(flavor: 'blob' | 'manifest', digest: string): Promise<{
@@ -28,7 +29,7 @@ export interface OciStoreApi {
 
   describeManifest(reference: string): Promise<ManifestOCIDescriptor>;
 
-  getFullLayer(flavor: 'blob' | 'manifest', digest: string): Promise<Uint8Array>;
+  getFullLayer(flavor: 'blob' | 'manifest', digest: string): Promise<ByteArray>;
 
-  getLayerStream(flavor: 'blob' | 'manifest', digest: string): Promise<ReadableStream<Uint8Array>>;
+  getLayerStream(flavor: 'blob' | 'manifest', digest: string): Promise<ReadableStream<ByteArray>>;
 }
