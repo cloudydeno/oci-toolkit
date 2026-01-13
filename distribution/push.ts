@@ -81,7 +81,7 @@ export async function pushFullArtifact(sourceStore: OciStoreApi, manifestDigest:
 export async function pushFullImage(opts: {
   sourceStore: OciStoreApi;
   manifest: ManifestOCI;
-  manifestRaw: Uint8Array;
+  manifestRaw: Uint8Array<ArrayBuffer>;
   client: RegistryStore;
   ref: string;
 }): Promise<{

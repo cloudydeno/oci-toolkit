@@ -8,7 +8,7 @@ import {
 
 import { fetchDockerCredential } from "../../util/docker-credentials.ts";
 import { sha256bytes } from "../../util/digest.ts";
-import type { OciStoreApi } from "../api.ts";
+import type { ByteArray, OciStoreApi } from "../api.ts";
 
 /** Simple API around an OCI / Docker registry. */
 export class RegistryStore implements OciStoreApi {
@@ -25,7 +25,7 @@ export class RegistryStore implements OciStoreApi {
 
   async uploadBlob(
     layer: ManifestOCIDescriptor,
-    streamFactory: () => Promise<ReadableStream<Uint8Array>>,
+    streamFactory: () => Promise<ReadableStream<ByteArray>>,
   ): Promise<void> {
     await this.api.blobUpload({
       digest: layer.digest,
@@ -34,7 +34,7 @@ export class RegistryStore implements OciStoreApi {
     });
   }
 
-  async getBlobStream(digest: string): Promise<ReadableStream<Uint8Array>> {
+  async getBlobStream(digest: string): Promise<ReadableStream<ByteArray>> {
     const bundle = await this.api.createBlobReadStream({digest});
     return bundle.stream;
   }
@@ -43,10 +43,10 @@ export class RegistryStore implements OciStoreApi {
   putLayerFromFile(_flavor: "blob"|"manifest", _descriptor: ManifestOCIDescriptor, _sourcePath: string): Promise<ManifestOCIDescriptor> {
     throw new Error("Method not implemented.");
   }
-  putLayerFromStream(_flavor: "blob"|"manifest", _descriptor: ManifestOCIDescriptor, _stream: ReadableStream<Uint8Array>): Promise<ManifestOCIDescriptor> {
+  putLayerFromStream(_flavor: "blob"|"manifest", _descriptor: ManifestOCIDescriptor, _stream: ReadableStream<ByteArray>): Promise<ManifestOCIDescriptor> {
     throw new Error("Method not implemented.");
   }
-  async putLayerFromBytes(flavor: "blob"|"manifest",descriptor: Omit<ManifestOCIDescriptor,"digest"|"size">&{ digest?: string|undefined; },rawData: Uint8Array): Promise<ManifestOCIDescriptor> {
+  async putLayerFromBytes(flavor: "blob"|"manifest",descriptor: Omit<ManifestOCIDescriptor,"digest"|"size">&{ digest?: string|undefined; },rawData: ByteArray): Promise<ManifestOCIDescriptor> {
     if (flavor == 'blob') {
       const digest = descriptor.digest ?? `sha256:${await sha256bytes(rawData)}`;
       const fullDescriptor: ManifestOCIDescriptor = {
@@ -113,7 +113,7 @@ export class RegistryStore implements OciStoreApi {
     };
   }
 
-  async getFullLayer(flavor: "blob"|"manifest",digest: string): Promise<Uint8Array> {
+  async getFullLayer(flavor: "blob"|"manifest",digest: string): Promise<ByteArray> {
     if (flavor == 'blob') {
       const resps = await this.api._headOrGetBlob('GET', digest)
       return resps.slice(-1)[0].dockerBody();
@@ -128,7 +128,7 @@ export class RegistryStore implements OciStoreApi {
     }
     throw new Error("Flavor not implemented.");
   }
-  async getLayerStream(flavor: "blob"|"manifest",digest: string): Promise<ReadableStream<Uint8Array>> {
+  async getLayerStream(flavor: "blob"|"manifest",digest: string): Promise<ReadableStream<ByteArray>> {
     if (flavor == 'blob') {
       const bundle = await this.api.createBlobReadStream({digest});
       return bundle.stream;

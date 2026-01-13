@@ -1,5 +1,7 @@
 import { forEach } from "@cloudydeno/stream-observables/transforms/for-each";
 
+type ByteArray = Uint8Array<ArrayBuffer>;
+
 export interface CompressionStats {
   rawSize: number;
   compressedSize: number;
@@ -12,8 +14,8 @@ export interface CompressionStats {
  * @param readable The input data to be compressed.
  * @returns A tuple, with the compressed output stream and a statistics promise.
  */
-export function gzipStream(readable: ReadableStream<Uint8Array>): [
-  ReadableStream<Uint8Array>,
+export function gzipStream(readable: ReadableStream<ByteArray>): [
+  ReadableStream<ByteArray>,
   Promise<CompressionStats>,
 ] {
   let rawSize = 0;
@@ -27,7 +29,7 @@ export function gzipStream(readable: ReadableStream<Uint8Array>): [
     .pipeThrough(forEach(x => rawSize += x.byteLength))
     .pipeThrough(new CompressionStream("gzip"))
     .pipeThrough(forEach(x => compressedSize += x.byteLength))
-    .pipeThrough(new TransformStream<Uint8Array,Uint8Array>({
+    .pipeThrough(new TransformStream<ByteArray,ByteArray>({
       flush: () => statsOk({
         rawSize,
         compressedSize,

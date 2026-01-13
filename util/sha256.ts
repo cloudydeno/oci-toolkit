@@ -16,7 +16,7 @@
  * @license MIT
  */
 
-export type Message = string | number[] | Uint8Array;
+export type Message = string | number[] | Uint8Array<ArrayBuffer>;
 
 const HEX_CHARS = "0123456789abcdef".split("");
 const EXTRA = [-2147483648, 8388608, 32768, 128] as const;
@@ -179,7 +179,7 @@ export class Sha256 {
       return this;
     }
 
-    let msg: string | number[] | Uint8Array | undefined;
+    let msg: string | number[] | Uint8Array<ArrayBuffer> | undefined;
     if (message instanceof ArrayBuffer) {
       msg = new Uint8Array(message);
     } else {
@@ -584,7 +584,7 @@ export class HmacSha256 extends Sha256 {
   constructor(secretKey: Message, is224 = false, sharedMemory = false) {
     super(is224, sharedMemory);
 
-    let key: number[] | Uint8Array | undefined;
+    let key: number[] | Uint8Array<ArrayBuffer> | undefined;
     if (typeof secretKey === "string") {
       const bytes: number[] = [];
       const length = secretKey.length;

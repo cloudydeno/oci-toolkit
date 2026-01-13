@@ -55,7 +55,7 @@ class ArtifactPuller {
   }
 
   async readManifest(digestOrTag: string): Promise<{
-    bytes: Uint8Array;
+    bytes: Uint8Array<ArrayBuffer>;
     json: Manifest;
 }> {
     const blob = await this.sourceStore.getFullLayer('manifest', digestOrTag);

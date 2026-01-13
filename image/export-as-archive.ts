@@ -38,7 +38,7 @@ type ExportOpts = {
  * Podman is supposed to be able to load OCI Image Layouts.
  * We'll also be able to load denodir artifact layouts eventually.
  */
-export async function exportArtifactAsArchive(opts: ExportOpts): Promise<ReadableStream<Uint8Array>> {
+export async function exportArtifactAsArchive(opts: ExportOpts): Promise<ReadableStream<Uint8Array<ArrayBuffer>>> {
 
   const manifestBytes = await opts.store.getFullLayer('manifest', opts.manifestDigest);
   const manifestData = JSON.parse(new TextDecoder().decode(manifestBytes)) as Manifest;
@@ -141,7 +141,7 @@ async function* emitAsDocker(opts: ExportOpts, manifestData: ManifestV2 | Manife
   }
 }
 
-async function* emitAsOCI(opts: ExportOpts, manifestBytes: Uint8Array, manifestData: ManifestV2 | ManifestOCI): AsyncGenerator<TarStreamInput> {
+async function* emitAsOCI(opts: ExportOpts, manifestBytes: Uint8Array<ArrayBuffer>, manifestData: ManifestV2 | ManifestOCI): AsyncGenerator<TarStreamInput> {
   // TODO: find a way to verify OCI image layout archive
 
   const manifestDigest = await sha256bytes(manifestBytes);
@@ -193,7 +193,7 @@ function tarJson(path: string, data: unknown) {
   return tarBytes(path, stableJsonSerialize(data));
 }
 
-function tarBytes(path: string, raw: Uint8Array): TarStreamInput {
+function tarBytes(path: string, raw: Uint8Array<ArrayBuffer>): TarStreamInput {
   return {
     path,
     type: 'file',

@@ -5,7 +5,7 @@ import { dirname as dirnamePath } from "@std/path/dirname";
 
 /** Streams thru a Tar archive and writes out its files underneath the given path */
 export async function extractTarArchive(
-  tarStream: ReadableStream<Uint8Array>,
+  tarStream: ReadableStream<Uint8Array<ArrayBuffer>>,
   destPath: string,
 ): Promise<{
   fileCount: number;
