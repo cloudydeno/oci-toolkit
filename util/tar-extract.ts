@@ -1,4 +1,4 @@
-import { forEach } from "@cloudydeno/stream-observables/transforms/for-each.ts";
+import { forEach } from "@cloudydeno/stream-observables/transforms/for-each";
 import { UntarStream } from "@std/tar/untar-stream";
 import { join as joinPath } from "@std/path/join";
 import { dirname as dirnamePath } from "@std/path/dirname";

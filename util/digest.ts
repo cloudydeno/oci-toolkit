@@ -1,4 +1,4 @@
-import { single } from "@cloudydeno/stream-observables/sinks/single.ts";
+import { single } from "@cloudydeno/stream-observables/sinks/single";
 
 import { Sha256 } from "./sha256.ts";
 

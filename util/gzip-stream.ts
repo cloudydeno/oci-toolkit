@@ -1,4 +1,4 @@
-import { forEach } from "@cloudydeno/stream-observables/transforms/for-each.ts";
+import { forEach } from "@cloudydeno/stream-observables/transforms/for-each";
 
 export interface CompressionStats {
   rawSize: number;
