@@ -1,7 +1,7 @@
-import type { ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+import type { ByteArray, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
 import { assertEquals } from "@std/assert/equals";
 
-import type { ByteArray, OciStoreApi } from "../api.ts";
+import type { OciStoreApi } from "../api.ts";
 import { sha256bytes } from "../../util/digest.ts";
 
 export class InMemoryStore implements OciStoreApi {

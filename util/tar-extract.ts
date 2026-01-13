@@ -2,10 +2,11 @@ import { forEach } from "@cloudydeno/stream-observables/transforms/for-each";
 import { UntarStream } from "@std/tar/untar-stream";
 import { join as joinPath } from "@std/path/join";
 import { dirname as dirnamePath } from "@std/path/dirname";
+import type { ByteArray } from "@cloudydeno/docker-registry-client/types";
 
 /** Streams thru a Tar archive and writes out its files underneath the given path */
 export async function extractTarArchive(
-  tarStream: ReadableStream<Uint8Array<ArrayBuffer>>,
+  tarStream: ReadableStream<ByteArray>,
   destPath: string,
 ): Promise<{
   fileCount: number;

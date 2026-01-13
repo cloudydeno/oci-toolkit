@@ -1,8 +1,7 @@
 import type {
+  ByteArray,
   ManifestOCIDescriptor,
 } from "@cloudydeno/docker-registry-client";
-
-export type ByteArray = Uint8Array<ArrayBuffer>;
 
 export interface OciStoreApi {
 

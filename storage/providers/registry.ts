@@ -1,6 +1,7 @@
 import {
   RegistryClientV2,
   RegistryHttpError,
+  type ByteArray,
   type ManifestOCIDescriptor,
   type RegistryClientOpts,
   type RegistryRepo,
@@ -8,7 +9,7 @@ import {
 
 import { fetchDockerCredential } from "../../util/docker-credentials.ts";
 import { sha256bytes } from "../../util/digest.ts";
-import type { ByteArray, OciStoreApi } from "../api.ts";
+import type { OciStoreApi } from "../api.ts";
 
 /** Simple API around an OCI / Docker registry. */
 export class RegistryStore implements OciStoreApi {

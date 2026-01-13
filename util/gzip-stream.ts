@@ -1,6 +1,5 @@
 import { forEach } from "@cloudydeno/stream-observables/transforms/for-each";
-
-type ByteArray = Uint8Array<ArrayBuffer>;
+import type { ByteArray } from "@cloudydeno/docker-registry-client/types";
 
 export interface CompressionStats {
   rawSize: number;

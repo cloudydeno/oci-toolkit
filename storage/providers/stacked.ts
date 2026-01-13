@@ -1,6 +1,6 @@
-import type { ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
+import type { ByteArray, ManifestOCIDescriptor } from "@cloudydeno/docker-registry-client";
 
-import type { ByteArray, OciStoreApi } from "../api.ts";
+import type { OciStoreApi } from "../api.ts";
 
 export class StackedStore implements OciStoreApi {
   constructor(

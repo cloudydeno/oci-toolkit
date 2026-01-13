@@ -4,6 +4,7 @@ import {
   MEDIATYPE_OCI_MANIFEST_INDEX_V1,
   MEDIATYPE_OCI_MANIFEST_V1,
   parseRepoAndRef,
+  type ByteArray,
   type Manifest,
   type ManifestOCI,
   type ManifestOCIDescriptor,
@@ -55,7 +56,7 @@ class ArtifactPuller {
   }
 
   async readManifest(digestOrTag: string): Promise<{
-    bytes: Uint8Array<ArrayBuffer>;
+    bytes: ByteArray;
     json: Manifest;
 }> {
     const blob = await this.sourceStore.getFullLayer('manifest', digestOrTag);
